@@ -122,7 +122,7 @@ def collect_syms(f):
         elif toc is not None:
             sym = parse_row(words, toc, ["Value"])
             name = sym["Name"]
-            if not name:
+            if not name or sym["Ndx"] == "UND":
                 continue
             if name in syms_set:
                 continue

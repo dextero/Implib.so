@@ -50,5 +50,6 @@ fi
 tests/thread/run.sh $ARCH
 tests/thread-2/run.sh $ARCH
 tests/def/run.sh $ARCH
+tests/archive/run.sh $ARCH
 
 echo 'All tests passed'
