@@ -91,7 +91,7 @@ def parse_row(words, toc, hex_keys):
     return vals
 
 
-def collect_syms(f):
+def collect_syms(f, *, is_symbol_exported):
     """Collect ELF dynamic symtab."""
 
     # --dyn-syms does not always work for some reason so dump all symtabs
@@ -122,7 +122,13 @@ def collect_syms(f):
         elif toc is not None:
             sym = parse_row(words, toc, ["Value"])
             name = sym["Name"]
-            if not name or sym["Ndx"] == "UND":
+            if not name:
+                continue
+            # Support generating stubs for .a libs.
+            # Skip non-exported symbols to avoid collecting the non-exported
+            # ones in syms_set, which prevents ignoring exported ones that show
+            # up later.
+            if not is_symbol_exported(sym):
                 continue
             if name in syms_set:
                 continue
@@ -644,13 +650,14 @@ Examples:
             s["Type"] != "NOTYPE",
             s["Ndx"] != "UND",
             s["Name"] not in ["", "_init", "_fini"],
+            s["Vis"] not in ["HIDDEN", "INTERNAL"],
         ]
         if args.no_weak_symbols:
             conditions.append(s["Bind"] != "WEAK")
         return all(conditions)
 
     if binary:
-        syms = collect_syms(input_name)
+        syms = collect_syms(input_name, is_symbol_exported=is_exported)
     else:
         syms = collect_def_exports(input_name)
 
